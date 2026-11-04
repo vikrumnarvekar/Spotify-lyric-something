@@ -5,14 +5,22 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - run: unzip -q LyricsPopup.zip
       - uses: actions/setup-java@v4
         with: { distribution: temurin, java-version: 17 }
       - uses: gradle/actions/setup-gradle@v4
         with: { gradle-version: "8.9" }
-      - run: gradle assembleDebug
-        working-directory: LyricsPopup
+      - name: Unzip and build
+        run: |
+          ls -la
+          Z=$(find . -name '*.zip' | head -1)
+          echo "zip found: $Z"
+          mkdir -p src
+          if [ -n "$Z" ]; then unzip -q "$Z" -d src; else cp -r . src/; fi
+          D=$(dirname "$(find src -name settings.gradle.kts | head -1)")
+          echo "project dir: $D"
+          cd "$D"
+          gradle assembleDebug
       - uses: actions/upload-artifact@v4
         with:
           name: LyricsPopup-debug-apk
-          path: LyricsPopup/app/build/outputs/apk/debug/app-debug.apk
+          path: src/**/app-debug.apk
